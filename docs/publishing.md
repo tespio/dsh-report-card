@@ -1,4 +1,4 @@
-# Publishing DSH Report Card
+﻿# Publishing DSH Report Card
 
 There are three publication surfaces, and they depend on each other in order:
 
@@ -11,23 +11,24 @@ There are three publication surfaces, and they depend on each other in order:
 3. **Your own index (optional)** — a format-1 JSON document you host; users add
    it as an index source in Plugins → Discover.
 
-The rest of this file is the exact sequence for this package. Current state on
-this machine (checked 2026-11-10):
+The rest of this file is the exact sequence for this package. Release state
+(2026-11-10):
 
-| Check | Result |
+| Surface | State |
 |---|---|
-| `npm view dsh-report-card` | 404 — the name is free |
-| `npm whoami` | 401 — no npm credentials configured here; run `npm login` |
-| `git remote -v` | `github.com/tespio/dsh-report-card` (created for this release) |
-| `npm pack` | 24 files, 40.9 kB packed, 128.5 kB unpacked, probe included |
-| Install of the packed tarball in a throwaway profile | works; `report_card` registered, entry active, context tax +344 tok |
+| npm | `dsh-report-card@1.0.0` published (publisher `init3`), 25 files, 139 kB unpacked |
+| GitHub | <https://github.com/tespio/dsh-report-card>, tag `v1.0.0` |
+| Registry acceptance | `node harness/cli.mjs dsh-report-card@1.0.0 --samples 3` installs from npm, registers `report_card`, entry `active` |
+| Live profile | installed from the registry (`"dsh-report-card": "1.0.0"`), entry active |
+| Catalog | **pending** — add `data/plugins/tespio__dsh-report-card.yml` from [`catalog-entry.yml`](catalog-entry.yml) |
 
 ## 0. Create the repository
 
-The catalog entry points at a `https://github.com/owner/repo` URL, and the
-catalog's npm probe only maps a package whose own `repository` field points back
-at that repo. So the repo is not optional bookkeeping — it is the link between
-the catalog entry and the npm package.
+Already done for 1.0.0; kept as the initial-setup reference. The catalog entry
+points at a `https://github.com/owner/repo` URL, and the catalog's npm probe only
+maps a package whose own `repository` field points back at that repo. So the repo
+is not optional bookkeeping — it is the link between the catalog entry and the
+npm package.
 
 ```powershell
 cd dsh-report-card
@@ -56,7 +57,7 @@ catalog; the bundle keeps using the vector `icon.svg` for its in-app tile.
 ```powershell
 npm login                 # once per machine
 npm whoami                # must print your npm user name
-npm view dsh-report-card  # must still be 404 before the first publish
+npm view dsh-report-card  # 404 before the very first publish; already published as 1.0.0
 npm test                  # unit + end-to-end; prepublishOnly also runs the units
 npm publish --access public
 ```

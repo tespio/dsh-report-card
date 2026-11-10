@@ -1,4 +1,4 @@
-﻿# DSH Report Card
+# DSH Report Card
 
 An independent, **dynamic** benchmark for DeepSeek Harness plugins. It installs
 one plugin into a throwaway profile, boots the real harness with it, runs one
@@ -87,20 +87,26 @@ test fixture.
 
 ## Install
 
-The plugin ships as a bundle with metadata, `locale/en.json`, `locale/zh.json`
-and an icon. Install it from this directory with the plugin manager — it adds
+Published on npm as **`dsh-report-card@1.0.0`**. It ships as a bundle with
+metadata, `locale/en.json`, `locale/zh.json` and an icon. The plugin manager adds
 the dependency *and* enables the bundle in one step; removing it undoes both:
 
 ```
-plugin_manager install_bundle  target: "file:C:/path/to/dsh-report-card"
+plugin_manager install_bundle  target: "dsh-report-card@1.0.0"
 plugin_manager remove_bundle   target: "dsh-report-card"
 ```
 
-`install_bundle` is the sanctioned path because a bundle is composed through the
-profile's bundle list, not just `node_modules`. The bundle inserts one entry,
-`dsh-report-card`, which contributes one tool. It was installed this way on dsh
-0.2.2-rc.1 and appears in the profile's bundle list beside the existing plugins
-without touching them.
+or from a terminal:
+
+```powershell
+dsh plugin --profile web add dsh-report-card
+```
+
+For development from a checkout, pass a directory spec instead
+(`file:C:/path/to/dsh-report-card`). `install_bundle` is the sanctioned path
+because a bundle is composed through the profile's bundle list, not just
+`node_modules`; the bundle inserts one entry, `dsh-report-card`, which
+contributes one tool.
 
 ## Use
 
