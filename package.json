@@ -1,0 +1,59 @@
+{
+  "name": "dsh-report-card",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Independent dynamic benchmark for DSH plugins: boot delta, per-turn hook overhead, context tax, capability surface and risk flags, measured in a throwaway profile.",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "benchmark",
+    "report-card",
+    "plugin-quality"
+  ],
+  "license": "MIT",
+  "author": "Andrei Dumitriu",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tespio/dsh-report-card.git"
+  },
+  "homepage": "https://github.com/tespio/dsh-report-card#readme",
+  "bugs": {
+    "url": "https://github.com/tespio/dsh-report-card/issues"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "harness/*.mjs",
+    "harness/probe/package.json",
+    "harness/probe/index.js",
+    "locale/*.json",
+    "icon.svg",
+    "docs/*.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=24.9.0",
+    "dsh": ">=0.2.2-rc.1 <0.3.0"
+  },
+  "scripts": {
+    "test": "node test/unit.test.mjs && node test/harness.test.mjs",
+    "card": "node harness/cli.mjs",
+    "prepublishOnly": "node test/unit.test.mjs"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,7 @@
+url: https://github.com/tespio/dsh-report-card
+name: DSH Report Card
+category: dev
+description:
+  en: Measures what a DSH plugin costs — boot delta, per-turn overhead, context tax, capability surface and risk flags — in a throwaway profile.
+  zh: 在一次性 profile 中实测插件的启动增量、单轮开销、上下文税、能力面与风险标记，并生成可复现的体检报告。
+icon: https://raw.githubusercontent.com/tespio/dsh-report-card/main/assets/icon-96.png

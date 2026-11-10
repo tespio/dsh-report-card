@@ -1,0 +1,11 @@
+{
+  "name": "@local/rc-noop-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fake plugin that contributes nothing: the floor of what one loader entry costs.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

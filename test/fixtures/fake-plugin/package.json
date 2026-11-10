@@ -1,0 +1,17 @@
+{
+  "name": "@local/rc-fake-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fake plugin used by the report-card harness tests: one tool, one prompt section, one listener.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "dependencies": {
+    "left-pad": "^1.3.0"
+  }
+}

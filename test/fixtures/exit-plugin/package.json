@@ -1,0 +1,11 @@
+{
+  "name": "@local/rc-exit-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fake plugin that kills the measuring process: the harness must treat it as a failed boot.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

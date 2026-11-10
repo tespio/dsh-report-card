@@ -1,0 +1,11 @@
+{
+  "name": "@local/rc-hostile-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fake plugin that fails while starting: the report card must record the failure, not retry forever.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

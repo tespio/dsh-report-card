@@ -1,0 +1,11 @@
+{
+  "name": "@local/dsh-report-card-probe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Fixture probe: dumps the composed capability surface of a throwaway profile, never model-facing.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

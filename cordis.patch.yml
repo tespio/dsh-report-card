@@ -1,0 +1,4 @@
+- insert:
+    - id: dsh-report-card
+      name: 'dsh-report-card'
+      config: {}

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DSH Report Card",
+    "description": "Independent benchmark for DSH plugins: measured boot delta, per-turn overhead, context tax, capability surface and risk flags — in a throwaway profile."
+  }
+}
