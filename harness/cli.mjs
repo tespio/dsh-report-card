@@ -3,25 +3,36 @@
  * `report-card` command line: measure one plugin, print its card.
  *
  *   node harness/cli.mjs <plugin-spec|directory> [--samples 3] [--json]
+ *   node harness/cli.mjs --from report-cards/x/y.json [--pretty]
  *
- * Every number in a saved card is reproducible with the command the card
- * prints in its Reproduce section.
+ * A terminal gets the boxed, coloured card; a redirected stream gets Markdown
+ * (or `--markdown` explicitly). Nothing about the measurement changes.
  */
+import fs from 'node:fs'
 import { detectRuntime } from './environment.mjs'
 import { classifySubject, generateReport, reproduceCommand } from './generate.mjs'
 import { FIXTURE_TASK } from './measure.mjs'
+import { renderPretty } from './pretty.mjs'
+import { renderMarkdown } from './render.mjs'
+import { renderSvg } from './svg.mjs'
 
 /** Print usage. */
 function help() {
   return `Usage: node harness/cli.mjs <plugin-spec|directory> [options]
+       node harness/cli.mjs --from <card.json> [--pretty|--markdown|--svg|--json]
 
 Measures a plugin in a throwaway profile and prints a report card.
   <plugin-spec>      npm package spec (name, name@version) or a directory path
+  --from <card.json> render an existing card instead of measuring
   --samples <n>      measurement rounds per variant (default 5, minimum 3)
   --task <text>      the scripted turn's text (default: "${FIXTURE_TASK}")
   --template <name>  shipped profile template to measure on (default: headless)
   --out <dir>        where to store cards (default: ./report-cards)
-  --json             print the report as JSON instead of Markdown
+  --pretty           print the terminal card even when stdout is redirected
+  --markdown         print Markdown instead of the terminal card
+  --svg <path>       also write the SVG graphic here
+  --json             print the report as JSON
+  --no-color         disable ANSI colour (also off automatically when redirected)
   --no-save          do not write the card to disk
   --keep             keep the throwaway profile (debugging a failed boot)
   --quiet            suppress progress lines
@@ -30,15 +41,16 @@ Measures a plugin in a throwaway profile and prints a report card.
   --help             print this help
 
 Examples:
-  node harness/cli.mjs ./test/fixtures/fake-plugin --samples 2
+  node harness/cli.mjs ./test/fixtures/fake-plugin --samples 3
   node harness/cli.mjs dsh-trust-check@0.2.6
+  node harness/cli.mjs --from report-cards/@local-rc-fake-bundle@0.1.0/latest.json --pretty --no-color
   DSH_REPORT_CARD_DIR=./cards node harness/cli.mjs @local/dsh-turbo
 `
 }
 
 /** Parse argv into an options object; unknown options are usage errors. */
 export function parseArgs(argv) {
-  const options = { samples: 5, save: true, json: false, quiet: false, keep: false }
+  const options = { samples: 5, save: true, json: false, quiet: false, keep: false, color: undefined, format: undefined }
   const positional = []
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index]
@@ -54,7 +66,12 @@ export function parseArgs(argv) {
       case '--task': options.task = value(); break
       case '--template': options.template = value(); break
       case '--out': options.outDir = value(); break
+      case '--from': options.from = value(); break
+      case '--svg': options.svg = value(); break
       case '--json': options.json = true; break
+      case '--pretty': options.format = 'pretty'; break
+      case '--markdown': options.format = 'markdown'; break
+      case '--no-color': options.color = false; break
       case '--no-save': options.save = false; break
       case '--keep': options.keep = true; break
       case '--quiet': options.quiet = true; break
@@ -66,12 +83,23 @@ export function parseArgs(argv) {
     }
   }
   if (options.help) return options
+  if (options.from !== undefined) {
+    if (positional.length > 0) throw new Error('--from takes no plugin spec')
+    return options
+  }
   if (positional.length !== 1) throw new Error('exactly one plugin spec or directory is required')
   if (!Number.isInteger(options.samples) || options.samples < 3 || options.samples > 10) {
     throw new Error('--samples must be an integer from 3 to 10: fewer than three samples cannot estimate machine noise')
   }
   options.spec = positional[0]
   return options
+}
+
+/** Whether the terminal should receive the coloured card. */
+function usePretty(options) {
+  if (options.format === 'pretty') return true
+  if (options.format === 'markdown') return false
+  return process.stdout.isTTY === true
 }
 
 /** Run the CLI. */
@@ -87,6 +115,26 @@ export async function main(argv = process.argv.slice(2)) {
     process.stdout.write(help())
     return 0
   }
+  const color = options.color === true
+    || (options.color !== false && process.stdout.isTTY === true && process.env.NO_COLOR === undefined)
+
+  if (options.from !== undefined) {
+    try {
+      const report = JSON.parse(fs.readFileSync(options.from, 'utf8'))
+      if (options.svg !== undefined) fs.writeFileSync(options.svg, renderSvg(report))
+      const output = options.json
+        ? `${JSON.stringify(report, null, 2)}\n`
+        : usePretty(options)
+          ? renderPretty(report, { color })
+          : renderMarkdown(report, { command: `node harness/cli.mjs --from ${JSON.stringify(options.from)}` })
+      process.stdout.write(output)
+      return 0
+    } catch (error) {
+      process.stderr.write(`report card: ${error?.message ?? error}\n`)
+      return 1
+    }
+  }
+
   const runtime = options.exe !== undefined || options.cli !== undefined
     ? { kind: 'explicit', exe: options.exe ?? process.execPath, cli: options.cli, version: undefined }
     : detectRuntime()
@@ -104,7 +152,13 @@ export async function main(argv = process.argv.slice(2)) {
       log,
       keep: options.keep,
     })
-    process.stdout.write(options.json ? `${JSON.stringify(result.report, null, 2)}\n` : result.markdown)
+    if (options.svg !== undefined) fs.writeFileSync(options.svg, result.svg)
+    const output = options.json
+      ? `${JSON.stringify(result.report, null, 2)}\n`
+      : usePretty(options)
+        ? renderPretty(result.report, { color })
+        : result.markdown
+    process.stdout.write(output)
     return result.report.grades.overall === 'F' ? 1 : 0
   } catch (error) {
     process.stderr.write(`report card failed: ${error?.stack ?? error}\n`)
@@ -116,4 +170,3 @@ export async function main(argv = process.argv.slice(2)) {
 }
 
 if (import.meta.main) process.exit(await main())
-

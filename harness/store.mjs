@@ -38,7 +38,7 @@ export function previousFor(index, slug) {
 }
 
 /** The index row for a finished card. */
-export function indexEntry(report, slug) {
+export function indexEntry(report, slug, auto = false) {
   return {
     slug,
     subject: `${report.subject.name}@${report.subject.version ?? '?'}`,
@@ -50,23 +50,46 @@ export function indexEntry(report, slug) {
     stepDeltaMs: report.measurements.step.deltaMs,
     contextDelta: report.measurements.context.heuristicTokens.delta,
     machine: `${report.machine.platform}/${report.machine.cpuCount}cpu`,
+    ...(auto ? { pendingPresentation: true } : {}),
   }
 }
 
-/** Write the JSON, the Markdown, and the updated index. */
-export function saveReport({ dir, report, markdown }) {
+/** Write the JSON, the Markdown, the SVG graphic, and the updated index. */
+export function saveReport({ dir, report, markdown, svg, auto = false }) {
   const slug = slugOf(report)
   const stamp = stampOf(new Date(report.generatedAt))
   const folder = path.join(dir, slug)
   fs.mkdirSync(folder, { recursive: true })
   const json = path.join(folder, `${stamp}.json`)
   const md = path.join(folder, `${stamp}.md`)
+  const graphic = path.join(folder, `${stamp}.svg`)
   fs.writeFileSync(json, `${JSON.stringify(report, null, 2)}\n`)
   fs.writeFileSync(md, markdown)
+  if (typeof svg === 'string' && svg !== '') fs.writeFileSync(graphic, svg)
 
   const index = readIndex(dir)
-  index.reports.push({ ...indexEntry(report, slug), json, markdown: md })
+  index.reports.push({
+    ...indexEntry(report, slug, auto),
+    json,
+    markdown: md,
+    ...(typeof svg === 'string' && svg !== '' ? { svg: graphic } : {}),
+  })
   if (index.reports.length > 200) index.reports = index.reports.slice(-200)
   fs.writeFileSync(path.join(dir, 'index.json'), `${JSON.stringify(index, null, 2)}\n`)
-  return { json, markdown: md, slug }
+  return { json, markdown: md, ...(typeof svg === 'string' && svg !== '' ? { svg: graphic } : {}), slug }
+}
+
+/**
+ * Take the cards waiting to be shown to the user, once.
+ *
+ * The flag is cleared as the cards are read, so a restart, a second session, or
+ * a repeated assembly cannot announce the same install twice.
+ */
+export function takePending(dir, limit = 3) {
+  const index = readIndex(dir)
+  const pending = index.reports.filter((entry) => entry.pendingPresentation === true)
+  if (pending.length === 0) return []
+  for (const entry of pending) delete entry.pendingPresentation
+  fs.writeFileSync(path.join(dir, 'index.json'), `${JSON.stringify(index, null, 2)}\n`)
+  return pending.slice(-limit)
 }

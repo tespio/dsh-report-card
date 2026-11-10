@@ -1,4 +1,4 @@
-# DSH Report Card
+﻿# DSH Report Card
 
 An independent, **dynamic** benchmark for DeepSeek Harness plugins. It installs
 one plugin into a throwaway profile, boots the real harness with it, runs one
@@ -47,7 +47,15 @@ request it produces; that is what this does, so it complements them.
 | **Health** | `ok`, `install-rejected`, `install-failed`, `boot-failed`, `turn-failed`, `entry-failed`, `entry-absent`. A plugin that fails to activate is a failed card, never a passing one |
 
 See [`docs/example-card.md`](docs/example-card.md) for a complete card of the
-test fixture.
+test fixture, and [`docs/example-card.svg`](docs/example-card.svg) for the
+graphic version of the same card.
+
+Every card is written three ways: JSON (the data), Markdown (the readable
+report), and **SVG** (a self-contained 1200×900 graphic — grade badge, metric
+tiles with noise floors, context breakdown, capability surface, risk flags).
+The SVG opens in any browser, embeds in Markdown, and has no runtime
+dependency. In a terminal the CLI prints a boxed, coloured card instead; a
+redirected stream gets Markdown.
 
 ## How it measures
 
@@ -123,12 +131,18 @@ you can see what the background pass produced.
 From a terminal — the same code path, printable output:
 
 ```powershell
-node harness/cli.mjs ./test/fixtures/fake-plugin              # local directory
+node harness/cli.mjs ./test/fixtures/fake-plugin              # terminal card (TTY)
 node harness/cli.mjs dsh-trust-check@0.2.6 --samples 3        # npm package
 node harness/cli.mjs dsh-quality-score --json                 # raw card
+node harness/cli.mjs --from report-cards/x/y.json --pretty    # re-render, no measurement
 ```
 
-Cards are written to `./report-cards/<name>@<version>/<timestamp>.{json,md}` and
+The terminal card is boxed and coloured when stdout is a TTY; a redirected
+stream prints the Markdown card instead. `--pretty` / `--markdown` force either
+form, `--no-color` drops ANSI, and `--svg <path>` writes the graphic beside the
+other outputs.
+
+Cards are written to `./report-cards/<name>@<version>/<timestamp>.{json,md,svg}` and
 indexed in `./report-cards/index.json`; set `DSH_REPORT_CARD_DIR` to move that.
 
 The tool takes **~60–90 s** for the default five samples: four harness boots per
@@ -161,9 +175,12 @@ its own package, and any `name@version` that already has a card. What it does
 **not** do: measure plugins that were already installed before this version
 started, unless `autoBackfill` is on.
 
-Automatic cards take roughly 45 s each (three samples) and run serially; a
-manual `report_card` call queues behind a running automatic card so the two
-never compete for the machine.
+The finished card is **announced exactly once**: the next prompt assembled after
+the measurement carries a one-shot note with the grade and the graphic path, and
+reading that note clears the flag — so a restart, a second session, or a later
+turn cannot repeat the announcement. Automatic cards take roughly 45 s each
+(three samples) and run serially; a manual `report_card` call queues behind a
+running automatic card so the two never compete for the machine.
 
 Config, in the profile patch (or the plugin's config in a preset):
 
@@ -280,6 +297,8 @@ check that was run against the packed artifact.
 | `harness/risk.mjs` | Static disclosure scan |
 | `harness/report.mjs` | Grades, digest, drift, card assembly |
 | `harness/render.mjs` | Markdown card |
+| `harness/svg.mjs` | Self-contained SVG graphic (and its `--from` re-renderer) |
+| `harness/pretty.mjs` | Boxed, coloured terminal card |
 | `harness/auto.mjs` | Install trigger, eligibility, and the background measurement queue |
 | `harness/repeat.mjs` | Repeatability check for the harness itself |
 | `docs/` | An example card and the acceptance evidence |

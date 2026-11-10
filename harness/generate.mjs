@@ -13,6 +13,7 @@ import { childEnv, detectRuntime, runChild } from './environment.mjs'
 import { measure, FIXTURE_TASK } from './measure.mjs'
 import { buildReport, SCHEMA } from './report.mjs'
 import { renderMarkdown } from './render.mjs'
+import { renderSvg } from './svg.mjs'
 import { previousFor, readIndex, resolveReportsDir, saveReport, slugOf } from './store.mjs'
 
 /**
@@ -60,6 +61,7 @@ export async function generateReport(options) {
     task = FIXTURE_TASK,
     template = 'headless',
     save = true,
+    auto = false,
     cwd = process.cwd(),
     outDir,
     runtime: suppliedRuntime,
@@ -86,15 +88,16 @@ export async function generateReport(options) {
 
   const report = buildReport({ measured, subject, runtime, samples, task, template, previous })
   const command = reproduceCommand({ spec: subject.spec, samples, task, outDir })
+  const svg = renderSvg(report)
   let paths
   let markdown = renderMarkdown(report, { command, savedPaths: undefined })
   if (save) {
-    paths = saveReport({ dir, report, markdown })
+    paths = saveReport({ dir, report, markdown, svg, auto })
     markdown = renderMarkdown(report, { command, savedPaths: paths })
     // Persist the final Markdown (it carries the saved paths) after the index write.
     fs.writeFileSync(paths.markdown, markdown)
   }
-  return { report, markdown, paths, slug, runtime, schema: SCHEMA, now: now().toISOString() }
+  return { report, markdown, paths, svg, slug, runtime, schema: SCHEMA, now: now().toISOString() }
 }
 
 /** Run `<cli> --version` once so the report can name the harness version. */

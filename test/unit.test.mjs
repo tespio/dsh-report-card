@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Unit tests for the report-card harness: pure measurement math, the request
  * describer, the surface diff, the risk scanner, the fixture endpoint, and
  * report storage. No harness boot happens here — `harness.test.mjs` does that.
@@ -15,7 +15,8 @@ import { diffSurface } from '../harness/surface.mjs'
 import { scanPackage, flagSummary } from '../harness/risk.mjs'
 import { canonicalJson, digestReport, gradeFor, gradeRisk, THRESHOLDS } from '../harness/report.mjs'
 import { renderMarkdown } from '../harness/render.mjs'
-import { previousFor, readIndex, saveReport, slugOf } from '../harness/store.mjs'
+import { renderSvg } from '../harness/svg.mjs'
+import { previousFor, readIndex, saveReport, slugOf, takePending } from '../harness/store.mjs'
 
 const root = path.join(import.meta.dirname, 'fixtures')
 let passed = 0
@@ -158,6 +159,20 @@ await test('grades follow the published ladders', () => {
   assert.equal(gradeRisk([{ level: 'high' }]), 'D')
 })
 
+await test('automatic cards are announced once', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rc-pending-'))
+  try {
+    const report = fakeReport()
+    saveReport({ dir, report, markdown: 'x', svg: '<svg/>', auto: true })
+    const first = takePending(dir, 3)
+    assert.equal(first.length, 1)
+    assert.equal(first[0].subject, 'dsh-x@1.0.0')
+    assert.deepEqual(takePending(dir, 3), [])
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 await test('canonical JSON and the digest are stable and sensitive', () => {
   assert.equal(canonicalJson({ b: 1, a: { d: 2, c: 3 } }), canonicalJson({ a: { c: 3, d: 2 }, b: 1 }))
   const report = { schema: 'x', measurements: { boot: { deltaMs: 1 } } }
@@ -204,9 +219,15 @@ await test('Markdown rendering and storage round-trip', () => {
     assert.match(markdown, /## Context tax/)
     assert.match(markdown, /## Static risk flags/)
     assert.match(markdown, new RegExp(report.digest))
-    const saved = saveReport({ dir, report, markdown })
+    const svg = renderSvg(report)
+    assert.match(svg, /^<svg /)
+    assert.match(svg, /DSH REPORT CARD/)
+    assert.match(svg, /dsh-x/)
+    const saved = saveReport({ dir, report, markdown, svg })
     assert.ok(fs.existsSync(saved.json))
     assert.ok(fs.existsSync(saved.markdown))
+    assert.ok(fs.existsSync(saved.svg))
+    assert.match(fs.readFileSync(saved.svg, 'utf8'), /<svg /)
     const index = readIndex(dir)
     assert.equal(index.reports.length, 1)
     assert.equal(previousFor(index, slugOf(report)).digest, report.digest)

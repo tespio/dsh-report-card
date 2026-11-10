@@ -204,7 +204,7 @@ export function renderMarkdown(report, { savedPaths, command } = {}) {
   add('```')
   add()
   if (savedPaths) {
-    add(`Saved: \`${savedPaths.json}\` · \`${savedPaths.markdown}\``)
+    add(`Saved: \`${savedPaths.json}\` · \`${savedPaths.markdown}\`${savedPaths.svg ? ` · graphic \`${savedPaths.svg}\`` : ''}`)
     add()
   }
   add(`Digest: \`sha256:${report.digest}\``)

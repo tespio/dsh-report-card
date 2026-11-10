@@ -17,7 +17,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { startAutoMeasurer } from './harness/auto.mjs'
 import { generateReport } from './harness/generate.mjs'
-import { readIndex, resolveReportsDir } from './harness/store.mjs'
+import { readIndex, resolveReportsDir, takePending } from './harness/store.mjs'
 
 export const name = 'dsh-report-card'
 
@@ -179,7 +179,7 @@ function registerRecentTool(ctx, reportsDirFor) {
 /** Start automatic measurement of newly installed plugins. */
 function startAuto(ctx, settings, configuredDir) {
   const log = (line) => ctx.logger?.info?.(`report-card auto: ${line}`)
-  ctx.inject(['pluginManager'], (sub) => {
+  ctx.inject(['pluginManager', 'systemPrompt'], (sub) => {
     const samples = Math.min(10, Math.max(3, Math.trunc(Number(settings.autoSamples) || 3)))
     const manager = sub.pluginManager
     const profileDir = typeof manager?.profile?.dir === 'string' ? manager.profile.dir : process.env.DSH_PROFILE_DIR
@@ -190,7 +190,7 @@ function startAuto(ctx, settings, configuredDir) {
       samples,
       backfill: settings.autoBackfill === true,
       profileDir,
-      generate: (options) => serialize(() => generateReport(options)),
+      generate: (options) => serialize(() => generateReport({ ...options, auto: true })),
       log,
     })
     sub.effect(() => () => instrument.stop())
@@ -200,6 +200,26 @@ function startAuto(ctx, settings, configuredDir) {
       instrument.schedule()
     })
     sub.on('plugin-manager/changed', () => instrument.schedule())
+
+    // Announce a finished card exactly once: the first prompt assembled after
+    // the measurement carries the note, and reading it clears the flag.
+    sub.systemPrompt.context({
+      name: 'report-card:pending',
+      order: 240,
+      text: () => {
+        const cards = takePending(reportsDir, 3)
+        if (cards.length === 0) return ''
+        const lines = cards.map((card) => {
+          const graphic = card.svg ?? card.markdown ?? card.json ?? ''
+          return `- ${card.subject}: grade ${card.grade}, boot ${Number.isFinite(card.bootDeltaMs) ? `${Math.round(card.bootDeltaMs)} ms CPU` : 'unmeasured'}, context ${Number.isFinite(card.contextDelta) ? `${Math.round(card.contextDelta)} tok` : 'unmeasured'}${graphic ? ` — graphic: ${graphic}` : ''}`
+        })
+        return [
+          `A plugin was just installed and measured automatically (${cards.length} new card${cards.length === 1 ? '' : 's'}).`,
+          'Show it to the user once — attach the graphic when the client can render it, otherwise give the numbers and the saved path — then continue with what you were doing.',
+          ...lines,
+        ].join('\n')
+      },
+    })
   })
 }
 
