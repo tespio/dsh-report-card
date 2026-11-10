@@ -1,0 +1,4 @@
+- insert:
+    - id: rc-fake-bundle
+      name: '@local/rc-fake-bundle'
+      config: {}

@@ -1,4 +1,4 @@
-﻿# Report card — @local/rc-fake-plugin@0.1.0
+# Report card — @local/rc-fake-plugin@0.1.0
 
 **Grade D** · graded boot +6.3 ms CPU · graded turn 0 ms · context +76 tok · risk D
 

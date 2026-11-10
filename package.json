@@ -1,6 +1,6 @@
 {
   "name": "dsh-report-card",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Independent dynamic benchmark for DSH plugins: boot delta, per-turn hook overhead, context tax, capability surface and risk flags, measured in a throwaway profile.",
   "keywords": [
@@ -43,9 +43,9 @@
     "dsh": ">=0.2.2-rc.1 <0.3.0"
   },
   "scripts": {
-    "test": "node test/unit.test.mjs && node test/harness.test.mjs",
+    "test": "node test/unit.test.mjs && node test/auto.test.mjs && node test/harness.test.mjs",
     "card": "node harness/cli.mjs",
-    "prepublishOnly": "node test/unit.test.mjs"
+    "prepublishOnly": "node test/unit.test.mjs && node test/auto.test.mjs"
   },
   "dsh": {
     "manifestVersion": 1,

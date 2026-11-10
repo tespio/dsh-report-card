@@ -1,4 +1,4 @@
-﻿from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw
 S = 4
 def rr(d, box, r, fill):
     d.rounded_rectangle(box, radius=r, fill=fill)

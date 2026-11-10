@@ -114,7 +114,11 @@ From a session (the tool is model-facing):
 
 ```
 report_card(pluginSpec: "dsh-trust-check@0.2.6", samples: 3)
+report_cards_recent(limit: 10)     # the last cards on disk, including automatic ones
 ```
+
+`report_card` measures on demand; `report_cards_recent` reads the card index so
+you can see what the background pass produced.
 
 From a terminal — the same code path, printable output:
 
@@ -131,6 +135,48 @@ The tool takes **~60–90 s** for the default five samples: four harness boots p
 sample round (surface × 2, turn × 2) plus one discarded warm-up round. Pass
 `samples: 3` for a quick look and `samples: 8..10` when you need to resolve a
 few milliseconds.
+
+## Automatic measurement
+
+Since 1.1.0 the card is produced **after a plugin is installed**, without
+anyone asking. The plugin listens to the plugin manager's
+`plugin-manager/operation` event and watches the profile manifest, queues the
+new package, and measures it in the background — the same throwaway profile,
+three samples, one measurement at a time.
+
+```
+install a plugin
+      │  manager event (Plugins page, plugin_manager tool)
+      │  or profile package.json change (dsh plugin add)
+      ▼
+debounce 2.5 s → list installed third-party bundles → skip ones already carded
+      ▼
+queue → measure in a throwaway profile → save card under $DSH_HOME/report-cards
+      ▼
+report_cards_recent lists it
+```
+
+What it skips: shipped/optional/official bundles, bundles that failed to load,
+its own package, and any `name@version` that already has a card. What it does
+**not** do: measure plugins that were already installed before this version
+started, unless `autoBackfill` is on.
+
+Automatic cards take roughly 45 s each (three samples) and run serially; a
+manual `report_card` call queues behind a running automatic card so the two
+never compete for the machine.
+
+Config, in the profile patch (or the plugin's config in a preset):
+
+```yaml
+- id: dsh-report-card
+  config:
+    autoMeasure: true      # false turns the background behavior off
+    autoSamples: 3         # 3..10; steadier numbers cost more time
+    autoBackfill: false    # true: card already-installed plugins at startup
+    autoReportsDir: null   # default: <DSH_HOME>/report-cards
+```
+
+`DSH_REPORT_CARD_AUTO=0` disables it for one process without touching config.
 
 ## Reading a card
 
@@ -183,6 +229,7 @@ Tests:
 
 ```powershell
 node test/unit.test.mjs      # units, ~1 s
+node test/auto.test.mjs     # install trigger and queue, ~1 s
 node test/harness.test.mjs   # real boots against fixtures, ~80 s
 ```
 
@@ -233,6 +280,7 @@ check that was run against the packed artifact.
 | `harness/risk.mjs` | Static disclosure scan |
 | `harness/report.mjs` | Grades, digest, drift, card assembly |
 | `harness/render.mjs` | Markdown card |
+| `harness/auto.mjs` | Install trigger, eligibility, and the background measurement queue |
 | `harness/repeat.mjs` | Repeatability check for the harness itself |
 | `docs/` | An example card and the acceptance evidence |
 | `locale/`, `icon.svg`, `cordis.patch.yml` | Bundle metadata and its one insert row |

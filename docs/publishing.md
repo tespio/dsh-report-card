@@ -1,4 +1,4 @@
-﻿# Publishing DSH Report Card
+# Publishing DSH Report Card
 
 There are three publication surfaces, and they depend on each other in order:
 

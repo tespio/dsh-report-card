@@ -1,0 +1,16 @@
+{
+  "name": "@local/rc-fake-bundle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fake bundle used to exercise automatic report cards after an install.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
