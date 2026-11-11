@@ -16,10 +16,11 @@ The rest of this file is the exact sequence for this package. Release state
 
 | Surface | State |
 |---|---|
-| npm | `dsh-report-card@1.0.0` published (publisher `init3`), 25 files, 139 kB unpacked |
-| GitHub | <https://github.com/tespio/dsh-report-card>, tag `v1.0.0` |
-| Registry acceptance | `node harness/cli.mjs dsh-report-card@1.0.0 --samples 3` installs from npm, registers `report_card`, entry `active` |
-| Live profile | installed from the registry (`"dsh-report-card": "1.0.0"`), entry active |
+| npm | `dsh-report-card@1.2.0` published (publisher `init3`), 28 files, 189 kB unpacked; `1.0.0` and `1.1.0` remain installable |
+| GitHub | <https://github.com/tespio/dsh-report-card>, tags `v1.0.0`, `v1.1.0`, `v1.2.0` |
+| Registry acceptance | `node harness/cli.mjs dsh-report-card@1.2.0 --samples 3` installs from npm, registers `report_card` + `report_cards_recent`, entry `active`, writes JSON + Markdown + SVG |
+| Live profile | installed from the registry (`"dsh-report-card": "1.2.0"`), entry active |
+| npm side effect | `0.0.0-stage` is npm's staged-publishing placeholder, created by the registry when the first release went through the staged flow; untagged and installable by nobody by accident |
 | Catalog | **pending** — add `data/plugins/tespio__dsh-report-card.yml` from [`catalog-entry.yml`](catalog-entry.yml) |
 
 ## 0. Create the repository

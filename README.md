@@ -1,4 +1,4 @@
-﻿# DSH Report Card
+# DSH Report Card
 
 An independent, **dynamic** benchmark for DeepSeek Harness plugins. It installs
 one plugin into a throwaway profile, boots the real harness with it, runs one
@@ -95,7 +95,7 @@ redirected stream gets Markdown.
 
 ## Install
 
-Published on npm as **`dsh-report-card@1.0.0`**. It ships as a bundle with
+Published on npm as **`dsh-report-card@1.2.0`**. It ships as a bundle with
 metadata, `locale/en.json`, `locale/zh.json` and an icon. The plugin manager adds
 the dependency *and* enables the bundle in one step; removing it undoes both:
 
